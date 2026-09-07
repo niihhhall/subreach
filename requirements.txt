@@ -1,0 +1,9 @@
+requests>=2.28
+pyyaml>=6.0
+# Postgres driver — REQUIRED for cloud deploys (Heroku/Railway/Render have
+# ephemeral disks, so SQLite would be wiped on restart). Harmless locally: the
+# store imports it lazily, only when DATABASE_URL is set.
+psycopg[binary]>=3.1
+# Dashboard (the `web` process only) — lightweight, read-only ops UI.
+fastapi>=0.110
+uvicorn[standard]>=0.29

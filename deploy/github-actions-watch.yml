@@ -1,0 +1,53 @@
+# Serverless 24/7 via GitHub Actions cron — no server to run.
+# Copy this to .github/workflows/watch.yml in your repo.
+#
+# Setup:
+#   1. Repo → Settings → Secrets and variables → Actions → New repository secret
+#      Add ZERNIO_API_KEY (and optionally OPENAI_API_KEY / GROQ_API_KEY).
+#   2. Lead state is persisted by committing data/ back to the repo each run,
+#      so the pipeline stays idempotent across runs.
+#
+# Caveats: GitHub cron fires at most every ~5 min and can be delayed under load;
+# it is "near-real-time", not instant. Great for hands-off, zero-server running.
+name: reddit-outreach-watch
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # every 15 minutes
+  workflow_dispatch: {}       # allow manual runs
+
+# Prevent overlapping runs from racing on the committed data/ state
+concurrency:
+  group: outreach-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write          # needed to commit data/ back
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        working-directory: reddit_outreach
+        run: pip install -r requirements.txt
+
+      - name: Run one cycle
+        working-directory: reddit_outreach
+        env:
+          ZERNIO_API_KEY: ${{ secrets.ZERNIO_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python -m reddit_outreach.cli watch campaigns/example_campaign.yaml --once
+
+      - name: Persist lead state
+        run: |
+          git config user.name  "outreach-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add reddit_outreach/data
+          git diff --cached --quiet || git commit -m "chore: outreach state $(date -u +%FT%TZ)"
+          git push

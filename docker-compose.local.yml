@@ -1,0 +1,57 @@
+# Local full-stack demo: backend (read-only API) + auto-seed + dashboard, backed
+# by a local SQLite store (./data) — no Postgres, no Zernio, no workers required.
+# One command brings up everything:
+#
+#   docker compose -f docker-compose.local.yml up --build
+#   → dashboard http://localhost:5300   ·   API http://localhost:8010
+#
+#   docker compose -f docker-compose.local.yml up -d --build   # background
+#   docker compose -f docker-compose.local.yml logs -f
+#   docker compose -f docker-compose.local.yml down
+#
+# The `seed` service populates demo data on first run (idempotent). Token is
+# `devtoken` for local only.
+services:
+  # Read-only dashboard backend (FastAPI /api). Reads the SQLite store.
+  web:
+    build: .
+    image: reddit-outreach
+    container_name: outreach-web
+    environment:
+      DASHBOARD_TOKEN: devtoken
+      CLIENT_TOKEN: devtoken
+      CAMPAIGN: campaigns/markeye.yaml
+      OUTREACH_DATA_DIR: /app/data
+      CORS_ORIGINS: "*"
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8010:8000"
+    command: sh -c "uvicorn reddit_outreach.web:app --host 0.0.0.0 --port 8000"
+
+  # One-off: seed offline demo data into the SQLite store (skips if already seeded).
+  seed:
+    image: reddit-outreach
+    build: .
+    environment:
+      OUTREACH_DATA_DIR: /app/data
+      CAMPAIGN: campaigns/markeye.yaml
+    volumes:
+      - ./data:/app/data
+      - ./scripts:/app/scripts:ro
+    command: sh -c "python scripts/seed_demo.py"
+    restart: "no"
+
+  # Dashboard (Vite/React), served on :5300. Browser talks to the API on :8010.
+  dashboard:
+    build:
+      context: ./dashboard
+      args:
+        VITE_API_BASE: http://localhost:8010
+        VITE_CLIENT_TOKEN: devtoken
+        VITE_CAMPAIGN: markeye-reddit
+    container_name: outreach-dashboard
+    ports:
+      - "5300:5300"
+    depends_on:
+      - web

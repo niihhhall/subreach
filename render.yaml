@@ -1,0 +1,109 @@
+# Render blueprint — one-shot deploy of both agents + managed Postgres.
+#   Render Dashboard → New → Blueprint → point at this repo.
+# Set ZERNIO_API_KEY and FIREWORKS_API_KEY (sync:false) in the dashboard.
+databases:
+  - name: outreach-db
+    databaseName: outreach
+    user: outreach
+    plan: free
+
+services:
+  # Read-only ops dashboard (public HTTPS, token-gated).
+  - type: web
+    name: outreach-dashboard
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn reddit_outreach.web:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health-check
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: outreach-db
+          property: connectionString
+      - key: DASHBOARD_TOKEN
+        generateValue: true
+      - key: CAMPAIGN
+        value: campaigns/markeye.yaml
+
+  # Agent 3 — warm-up swarm. Provide the roster via the SWARM_ACCOUNTS env var
+  # (JSON/YAML string) and each account key via its ZERNIO_KEY_* env var.
+  - type: worker
+    name: outreach-warm
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m reddit_outreach.cli warm $CAMPAIGN --confirm --loop --interval 21600
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: outreach-db
+          property: connectionString
+      - key: SWARM_ACCOUNTS
+        sync: false
+      - key: ZERNIO_KEY_ACCT1
+        sync: false
+      - key: ZERNIO_KEY_ACCT2
+        sync: false
+      - key: ZERNIO_KEY_ACCT3
+        sync: false
+      - key: OUTREACH_LLM_PROVIDER
+        value: fireworks
+      - key: FIREWORKS_API_KEY
+        sync: false
+      - key: OUTREACH_LLM_MODEL
+        value: accounts/fireworks/models/deepseek-v4-pro
+      - key: REDDIT_BACKEND
+        value: zernio
+      - key: CAMPAIGN
+        value: campaigns/markeye.yaml
+
+  # Agent 1 — the lead finder.
+  - type: worker
+    name: outreach-watch
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m reddit_outreach.cli watch $CAMPAIGN --interval 1800 --draft-budget 10
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: outreach-db
+          property: connectionString
+      - key: ZERNIO_API_KEY
+        sync: false
+      - key: FIREWORKS_API_KEY
+        sync: false
+      - key: OUTREACH_LLM_PROVIDER
+        value: fireworks
+      - key: OUTREACH_LLM_MODEL
+        value: accounts/fireworks/models/deepseek-v4-pro
+      - key: REDDIT_BACKEND
+        value: zernio
+      - key: CAMPAIGN
+        value: campaigns/markeye.yaml
+
+  # Agent 2 — the subreddit scout.
+  - type: worker
+    name: outreach-scout
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m reddit_outreach.cli scout $CAMPAIGN --loop --interval 86400 --per-vertical 8
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: outreach-db
+          property: connectionString
+      - key: ZERNIO_API_KEY
+        sync: false
+      - key: FIREWORKS_API_KEY
+        sync: false
+      - key: OUTREACH_LLM_PROVIDER
+        value: fireworks
+      - key: OUTREACH_LLM_MODEL
+        value: accounts/fireworks/models/deepseek-v4-pro
+      - key: REDDIT_BACKEND
+        value: zernio
+      - key: CAMPAIGN
+        value: campaigns/markeye.yaml

@@ -1,0 +1,183 @@
+# Markeye — Reddit outreach campaign (this system's real schema).
+# Run:  python -m reddit_outreach.cli run campaigns/markeye.yaml
+#       python -m reddit_outreach.cli queue campaigns/markeye.yaml
+#
+# ICP in one line: businesses running paid ads that LOSE leads after hours
+# because there's no team and no qualification system. Markeye answers + qualifies
+# those leads 24/7 on WhatsApp.
+#
+# Motion: comment-first (value-first replies you review, then send).
+
+name: markeye-reddit
+
+product: Markeye
+
+# The outcome, framed around the exact pain: fast, 24/7 lead response + qualification.
+value_proposition: >
+  A WhatsApp AI SDR that instantly answers and qualifies every inbound lead —
+  including nights, weekends, and after office hours — so the leads you're paying
+  for with ads don't go cold before someone follows up. It replies in seconds,
+  asks the qualifying questions, and books the ones worth your time.
+
+# Ideal customer profile — the "runs ads, no after-hours coverage, no qualification" signal.
+icp: >
+  Owners and operators of lead-driven businesses that spend on paid ads
+  (Meta/Google/etc.) but have no sales team or after-hours coverage, so inbound
+  leads sit unanswered and go cold. Strongest fits: high-ticket, appointment-based
+  businesses where lead qualification and after-hours response decide the sale —
+  real estate agents/realtors, mortgage brokers and loan officers, dental clinics,
+  med spas and aesthetic clinics — plus home services (HVAC, roofing, contractors),
+  law firms, and fitness studios, and marketing agencies running ads for these
+  clients. They feel slow speed-to-lead, missed overnight/weekend leads, and no
+  system to qualify or follow up.
+
+# Keyword search — the language people actually use for this pain.
+keywords:
+  - running ads but leads go cold
+  - leads coming in after hours
+  - spending on ads not converting leads
+  - speed to lead
+  - follow up with leads fast
+  - qualify leads automatically
+  - too many leads to handle solo
+
+# Keyword search — kept lean (each keyword × sub is a separate API call).
+# Freshness comes from the feeds below, not from broad keyword search.
+subreddits:
+  - smallbusiness
+  - Entrepreneur
+  - leadgeneration
+  - PPC
+
+# Feed browsing (sorted by 'new') — the freshness engine. All 15 target subs live
+# here so we catch brand-new posts the moment they land, then qualify + triage.
+# NOTE: verify each sub exists + its self-promo rules (403 blocks anonymous reads).
+feed_subreddits:
+  - smallbusiness
+  - Entrepreneur
+  - PPC
+  - FacebookAds
+  - GoogleAds
+  - marketing
+  - DigitalMarketing
+  - leadgeneration
+  - agency
+  - msp
+  - realestate
+  - HVAC
+  - Roofing
+  - Contractor
+  - CRM
+  # High-ticket, appointment-based verticals where lead qualification +
+  # after-hours response is the whole game:
+  - realtors
+  - Mortgages
+  - loanoriginators
+  - Esthetics
+  - medspa
+  # Added by the Subreddit Scout (LLM brainstorm → live feed-validated).
+  # Dropped by the Scout as empty/nonexistent: Dentistry, GymOwners, FitnessBusiness.
+  - LawFirm
+  - LegalMarketing
+  - RealEstateMarketing
+  - RealEstateTechnology
+  - MortgageBrokers
+  - Plumbing
+  - Electricians
+  - Chiropractic
+  - Veterinary
+  - HomeServices
+  - personaltraining
+  # added by scout 2026-07-20
+  - freightbrokers
+  - sweatystartup
+  - DentalMarketing
+  - Medicalaesthetics
+  - gymmarketing
+  - solarbusiness
+  - AestheticMedicine
+  - DentalOffice
+  - RoofingSales
+  - boutiquefitness
+  - manufacturing
+  - sales
+  - solarinstallers
+  - LawFirmMarketing
+  - b2bmarketing
+  - digital_marketing
+  - 3PL
+  - Dentists
+  - RealEstateAgentTips
+  - fabrication
+  - landscaping
+  - crossfit
+  - leanmanufacturing
+  - madeinusa
+  - owneroperators
+  - solar
+  - PlasticSurgery
+  - supplychain
+  - warehousing
+  - HealthcareMarketing
+  - logistics
+feed_sort: new
+
+# Guardrails
+min_fit_score: 55
+# Raised for 21 feeds: the two-stage funnel handles volume now, so don't let this
+# cap truncate feed results (keyword-search results are collected first).
+max_leads_per_run: 200
+outreach_kind: comment
+# Tone tells the drafting LLM how to write. The last line is the "question stuff"
+# you asked for: end with a genuine, low-pressure qualifying question that also
+# starts the conversation and reveals intent.
+tone: >
+  peer-to-peer, practical, genuinely helpful, no hard selling. Lead with a real
+  answer to their lead-handling problem. Mention Markeye only if it directly
+  fits. End with ONE low-pressure question about how they currently handle leads
+  that come in after hours or when they're busy — this both helps them and
+  surfaces whether they're a fit.
+
+disallowed_phrases:
+  - guaranteed results
+  - guaranteed
+  - 10x your revenue
+  - 100% roi
+  - limited time
+  - act now
+  - exclusive deal
+  - buy now
+
+# Honest disclosure. Any product mention counts as self-promo, so drafts carrying
+# this are rejected in strict subs by design — relax those subs only after checking.
+signature: "(disclosure: I build Markeye, a WhatsApp AI SDR — happy to help either way)"
+
+# ── Account-health guardrails (conservative for a real account) ──
+max_sends_per_day: 6
+max_sends_per_subreddit_per_day: 1
+min_seconds_between_sends: 180
+warmup_days: 7
+warmup_max_sends_per_day: 2
+verify_sends: true
+
+# ── Per-subreddit rules ──
+# Strict-by-default: unknown subs get no links / no self-promo automatically.
+# Relax ONLY where you've confirmed a disclosed founder comment is allowed.
+strict_by_default: true
+auto_bench_removal_rate: 0.5
+auto_bench_min_samples: 4
+
+subreddit_rules:
+  # Vertical / practitioner subs that tend to tolerate a disclosed, helpful mention:
+  leadgeneration:
+    allow_self_promo: true
+    max_sends_per_day: 1
+  agency:
+    allow_self_promo: true
+    max_sends_per_day: 1
+  msp:
+    allow_self_promo: true
+    max_sends_per_day: 1
+  # Strict subs (Entrepreneur, marketing, smallbusiness, PPC, FacebookAds,
+  # realestate, HVAC) inherit the strict floor: comment with pure help, no
+  # product mention. Verify and relax individually if their rules allow it.

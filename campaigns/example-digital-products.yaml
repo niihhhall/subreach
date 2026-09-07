@@ -1,0 +1,98 @@
+# Pilot template — a founder selling DIGITAL PRODUCTS (courses, templates,
+# ebooks, tools). Copy this, fill in the <<...>> bits for your friend's actual
+# offer, then run:
+#   python -m reddit_outreach.cli find   campaigns/example-digital-products.yaml
+#   python -m reddit_outreach.cli run    campaigns/example-digital-products.yaml
+#   python -m reddit_outreach.cli dm     campaigns/example-digital-products.yaml   # Phase 3 (dry-run)
+#   python -m reddit_outreach.cli handoff campaigns/example-digital-products.yaml --pending
+#
+# THE MOLD: this is a second campaign in the SAME repo. Deploy it separately
+# (its own Reddit account + its own DATABASE_URL) via CAMPAIGN=campaigns/example-digital-products.yaml.
+
+name: digital-products-pilot
+
+product: <<Your friend's product, one line — e.g. "Notion templates for freelancers">>
+
+value_proposition: >
+  <<The outcome the buyer gets, framed around their pain. e.g. "Done-for-you
+  Notion systems that let solo freelancers track clients, invoices, and projects
+  in one place instead of five spreadsheets — set up in an afternoon.">>
+
+icp: >
+  <<Who feels this pain. Be specific: role, situation, and the frustration they
+  post about. e.g. "Solo freelancers and small agency owners who are
+  disorganized, juggling clients in spreadsheets, and asking how to systemize
+  their business. They post about tool overwhelm, missed follow-ups, and wanting
+  a simple all-in-one setup.">>
+
+# The exact language buyers use when they have the problem (not your product name).
+keywords:
+  - <<how do you stay organized as a freelancer>>
+  - <<best notion template for>>
+  - <<spreadsheet is a mess>>
+  - <<tool to track clients and invoices>>
+  - looking for a system to
+
+# Keyword-search subs (each keyword × sub is one API call — keep lean).
+subreddits:
+  - freelance
+  - Entrepreneur
+
+# Feed subs = the freshness engine. Add the communities your buyers actually live
+# in. The Scout agent will grow this list automatically once it's running.
+feed_subreddits:
+  - freelance
+  - Notion
+  - productivity
+  - Entrepreneur
+  - smallbusiness
+  - digitalnomad
+  - SideProject
+feed_sort: new
+
+# ── Guardrails ──
+min_fit_score: 55
+max_leads_per_run: 150
+outreach_kind: comment
+tone: >
+  peer-to-peer, genuinely helpful, no hard selling. Answer their question first
+  with something they can use even if they never buy. Mention the product only
+  where it directly fits and the subreddit allows it. End with one low-pressure
+  question about how they currently handle the problem.
+
+disallowed_phrases:
+  - guaranteed
+  - limited time
+  - act now
+  - buy now
+  - exclusive deal
+
+signature: ""   # e.g. "(disclosure: I make <<product>> — happy to help either way)"
+
+# ── Account-health guardrails (conservative for a fresh account) ──
+max_sends_per_day: 5
+max_sends_per_subreddit_per_day: 1
+min_seconds_between_sends: 180
+warmup_days: 7
+warmup_max_sends_per_day: 2
+verify_sends: true
+
+# ── Per-subreddit rules ── (strict floor: unknown subs get no links / no promo)
+strict_by_default: true
+auto_bench_removal_rate: 0.5
+auto_bench_min_samples: 4
+subreddit_rules: {}
+
+# ── Phase 3: DM outreach (HIGH ban-risk — leave OFF until you've built karma) ──
+dm_enabled: false          # set true ONLY after warming the account; still gated + capped
+max_dms_per_day: 3
+dm_opt_out: >
+  No worries at all if this isn't relevant — just ignore this and I won't follow up.
+dm_signature: ""
+
+# ── Phase 4: handoff to Markeye (or any WhatsApp/CRM webhook) ──
+# Leave the URL blank to keep handoffs in dry-run (preview only). To go live,
+# set handoff_webhook_url (or the MARKEYE_WEBHOOK_URL env var) + handoff_secret.
+handoff_enabled: true
+handoff_webhook_url: ""
+handoff_secret: ""

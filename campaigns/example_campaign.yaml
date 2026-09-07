@@ -1,0 +1,87 @@
+# Example outreach campaign.
+# Copy this file and edit it for your own product.
+# Run: python -m reddit_outreach.cli run campaigns/example_campaign.yaml
+
+name: docsync-devtools
+
+# One-line description of what you offer.
+product: DocSync
+
+# Why it helps the person you're reaching (the outcome, not the features).
+value_proposition: >
+  Keeps API documentation automatically in sync with code so integration
+  partners never hit stale or broken docs after a release.
+
+# Ideal customer profile, in prose. The qualification agent scores against this.
+icp: >
+  Engineering leads, founders, or platform teams at small-to-mid software
+  companies who own a public or partner-facing API and feel the pain of docs
+  drifting out of date.
+
+# Keywords the discovery agent searches for.
+keywords:
+  - api documentation out of date
+  - keep docs in sync with code
+  - onboarding engineers messy codebase
+  - swagger docs drift
+
+# Target subreddits for keyword search (leave empty to search Reddit globally).
+subreddits:
+  - devops
+  - ExperiencedDevs
+  - webdev
+  - programming
+
+# Feed-based discovery: browse these subreddits' feeds directly (no keyword needed).
+# Great for catching fresh posts the moment they land.
+feed_subreddits:
+  - devops
+  - ExperiencedDevs
+feed_sort: hot          # hot | new | top | rising
+
+# Guardrails
+min_fit_score: 55          # leads below this are disqualified
+max_leads_per_run: 25
+outreach_kind: comment     # "comment" or "dm"
+tone: helpful, peer-to-peer, no hard selling
+
+# Phrases the compliance agent will strip / flag as too salesy.
+disallowed_phrases:
+  - buy now
+  - limited time
+  - act now
+  - guaranteed
+  - cheap
+  - best in class
+
+# Optional signature appended to every draft. Keep disclosure honest.
+signature: "(disclosure: I work on DocSync — happy to answer questions either way)"
+
+# ── Per-subreddit rule awareness ──────────────────────────────────────
+# You do NOT need to declare rules for every subreddit. With strict_by_default
+# on (the safe floor), unknown subs get the strictest policy automatically:
+# no links, no self-promotion. A genuinely value-first comment passes almost
+# everywhere under that floor. Only list the few subs that need an exception.
+strict_by_default: true
+
+# Auto-bench: if a subreddit removes too many of our verified sends, the send
+# gate stops targeting it (the removal detector feeds this closed loop).
+auto_bench_removal_rate: 0.5     # bench above this share of removals
+auto_bench_min_samples: 4        # ...once we have at least this many verified sends
+
+# Relax or tighten specific subs. Any field you omit inherits the floor.
+# (karma/account-age gates activate once the health probe can read the account.)
+subreddit_rules:
+  devops:
+    allow_links: true            # devops tolerates a single relevant link
+    max_sends_per_day: 2
+  ExperiencedDevs:
+    allow_links: false
+    allow_self_promo: false
+    requires_flair: true         # flagged for the human reviewer before sending
+    min_comment_karma: 100
+    min_account_age_days: 90
+    max_sends_per_day: 1
+    extra_disallowed_phrases:
+      - check out my
+      - I built

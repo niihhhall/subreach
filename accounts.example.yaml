@@ -1,0 +1,38 @@
+# Warm-up swarm roster TEMPLATE (safe to commit — no secrets here).
+# Copy to accounts.yaml (gitignored) and fill in. Put the actual Zernio API keys
+# in .env under the names you reference via api_key_env.
+#
+# HARD RULES the swarm enforces:
+#   * DISTINCT subreddits per account (overlap warns — it looks like a cluster).
+#   * Comment-only, genuinely helpful, NO product mention (this is warm-up).
+#   * Low daily cap + human-like jitter.
+#   * NEVER cross-vote or comment on another swarm account's posts.
+
+# persona presets (each account should use a DIFFERENT one so they don't share a
+# writing fingerprint): operator (warm founder), marketer (sharp, asks questions),
+# tradesman (blunt, short, lowercase). Omit for a neutral default voice.
+
+accounts:
+  - label: acct1
+    email: you+acct1@example.com
+    zernio_reddit_id: "<zernio reddit account id>"
+    api_key_env: ZERNIO_KEY_ACCT1        # name of the env var in .env holding the key
+    persona: operator
+    max_comments_per_day: 4
+    active_hours: "8-23"                 # persona's local waking hours (24h)
+    tz_offset: -5                        # hours from UTC for this persona
+    subreddits:
+      - smallbusiness
+      - Entrepreneur
+
+  - label: acct2
+    email: you+acct2@example.com
+    zernio_reddit_id: "<zernio reddit account id>"
+    api_key_env: ZERNIO_KEY_ACCT2
+    persona: marketer
+    max_comments_per_day: 4
+    active_hours: "9-24"
+    tz_offset: -6
+    subreddits:
+      - leadgeneration
+      - PPC

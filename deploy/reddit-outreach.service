@@ -1,0 +1,25 @@
+# systemd service for a long-running 24/7 watch loop on a VPS.
+# Install:
+#   sudo cp deploy/reddit-outreach.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now reddit-outreach
+# Logs:
+#   journalctl -u reddit-outreach -f
+[Unit]
+Description=Reddit outreach 24/7 watch loop
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Adjust User and paths to your box:
+User=outreach
+WorkingDirectory=/opt/reddit-outreach
+EnvironmentFile=/opt/reddit-outreach/.env
+ExecStart=/usr/bin/python3 -m reddit_outreach.cli watch campaigns/example_campaign.yaml --interval 900
+# Restart on any exit (crash, OOM, etc.) and after reboots (via enable)
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

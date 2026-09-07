@@ -1,0 +1,20 @@
+# pipeline state / generated output
+data/
+*.csv
+
+# env & secrets
+.env
+# warm-up swarm roster (emails + account ids) — keep private; commit the .example
+accounts.yaml
+accounts.local.yaml
+
+# python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+uv.lock

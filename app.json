@@ -1,0 +1,52 @@
+{
+  "name": "reddit-outreach",
+  "description": "24/7 Reddit lead-gen: a watch agent that finds ad-runner/after-hours-lead prospects and a scout agent that discovers target subreddits. Two workers coordinating through Postgres.",
+  "keywords": ["reddit", "outreach", "lead-generation", "sdr", "automation"],
+  "stack": "heroku-22",
+  "buildpacks": [{ "url": "heroku/python" }],
+  "env": {
+    "ZERNIO_API_KEY": {
+      "description": "Zernio API key — live Reddit read + send (no Reddit API key needed).",
+      "required": true
+    },
+    "FIREWORKS_API_KEY": {
+      "description": "Fireworks AI key for LLM qualification/drafting (or use OPENAI/GROQ/ANTHROPIC).",
+      "required": false
+    },
+    "OUTREACH_LLM_PROVIDER": { "value": "fireworks" },
+    "OUTREACH_LLM_MODEL": { "value": "accounts/fireworks/models/deepseek-v4-pro" },
+    "REDDIT_BACKEND": {
+      "description": "Must be zernio (or rdt) on cloud — opencli needs a desktop browser.",
+      "value": "zernio"
+    },
+    "REDDIT_FALLBACK": {
+      "description": "Optional read-fallback backend if the primary read errors/empties (e.g. rdt). Requires rdt-cli installed + logged in.",
+      "value": ""
+    },
+    "CAMPAIGN": {
+      "description": "Path to the campaign file this deployment runs (the 'mold').",
+      "value": "campaigns/markeye.yaml"
+    },
+    "DASHBOARD_TOKEN": {
+      "description": "Shared secret for the read-only web dashboard. Use a long random string. Unset = dashboard locks itself.",
+      "generator": "secret",
+      "required": false
+    },
+    "SWARM_ACCOUNTS": {
+      "description": "Warm-up swarm roster as a JSON/YAML string (only if you run the warm worker). See accounts.example.yaml.",
+      "required": false
+    },
+    "ZERNIO_KEY_ACCT1": { "description": "Warm-up account 1 Zernio key", "required": false },
+    "ZERNIO_KEY_ACCT2": { "description": "Warm-up account 2 Zernio key", "required": false },
+    "ZERNIO_KEY_ACCT3": { "description": "Warm-up account 3 Zernio key", "required": false }
+  },
+  "addons": [
+    { "plan": "heroku-postgresql:essential-0" }
+  ],
+  "formation": {
+    "web": { "quantity": 1, "size": "basic" },
+    "watch": { "quantity": 1, "size": "basic" },
+    "scout": { "quantity": 1, "size": "basic" },
+    "warm": { "quantity": 0, "size": "basic" }
+  }
+}

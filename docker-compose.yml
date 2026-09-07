@@ -1,0 +1,102 @@
+# 24/7 always-on outreach — two agents + Postgres, one shot.
+#   docker compose up -d --build     # start everything in the background
+#   docker compose logs -f watch     # watch the lead finder
+#   docker compose logs -f scout     # watch the subreddit scout
+#   docker compose down              # stop
+#
+# The two agents coordinate through Postgres (the scout writes subreddits, the
+# watch reads them). Postgres persists in a named volume, so nothing is lost on
+# restart or host reboot. Set your keys in .env first.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: outreach
+      POSTGRES_PASSWORD: outreach
+      POSTGRES_DB: outreach
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U outreach"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Agent 1 — finds leads across the campaign's subreddits every 30 min.
+  watch:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://outreach:outreach@db:5432/outreach
+      REDDIT_BACKEND: zernio          # opencli needs desktop Chrome — never in a container
+      CAMPAIGN: campaigns/markeye.yaml
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python -m reddit_outreach.cli watch \"$$CAMPAIGN\"
+      --interval 1800 --draft-budget 10"
+
+  # Agent 2 — discovers + validates new subreddits into the DB once a day.
+  scout:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://outreach:outreach@db:5432/outreach
+      REDDIT_BACKEND: zernio
+      CAMPAIGN: campaigns/markeye.yaml
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python -m reddit_outreach.cli scout \"$$CAMPAIGN\"
+      --loop --interval 86400 --per-vertical 8"
+
+  # Agent 3 — warm-up swarm: rotates the roster in accounts.yaml, human-paced,
+  # comment-only, per-account capped. Reads keys from .env, roster from the
+  # mounted accounts.yaml. Dry-run is safe; this runs --confirm, so keep the
+  # per-account caps low and the roster subreddits distinct.
+  warm:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://outreach:outreach@db:5432/outreach
+      REDDIT_BACKEND: zernio
+      CAMPAIGN: campaigns/markeye.yaml
+    volumes:
+      - ./accounts.yaml:/app/accounts.yaml:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python -m reddit_outreach.cli warm \"$$CAMPAIGN\"
+      --confirm --loop --interval 21600"
+
+  # Read-only ops dashboard — reads the same Postgres, never writes/posts.
+  # Open http://localhost:8000/?token=<DASHBOARD_TOKEN> once (cookie remembers you).
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://outreach:outreach@db:5432/outreach
+      REDDIT_BACKEND: zernio
+      CAMPAIGN: campaigns/markeye.yaml
+      # Set a long random secret in .env; unset = dashboard locks itself.
+      DASHBOARD_TOKEN: ${DASHBOARD_TOKEN:-}
+    volumes:
+      - ./accounts.yaml:/app/accounts.yaml:ro   # so the /swarm page can read the roster
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "uvicorn reddit_outreach.web:app --host 0.0.0.0 --port 8000"
+
+volumes:
+  pgdata:
