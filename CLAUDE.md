@@ -53,7 +53,7 @@ cli queue/review/stats/activity/health/send <campaign>
 - The **campaign YAML is the mold** — new outreach = new campaign file, never a code fork.
 - Store keys everything by campaign name (idempotent, dedup by post id).
 - Tests: `python -m pytest -q` — fully offline (mock backend, monkeypatched HTTP).
-  Currently ~87 passing. Add tests for new behavior.
+  Currently 183 passing (needs `httpx2` for the FastAPI test client). Add tests for new behavior.
 
 ## Gotchas (learned the hard way — don't repeat)
 - **opencli needs desktop Chrome** — cannot run headless/cloud. Cloud uses `zernio`.
