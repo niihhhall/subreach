@@ -5,17 +5,24 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "reddit-outreach"
 version = "0.1.0"
-description = "Multi-agent Reddit outreach pipeline built on top of Agent-Reach"
+description = "Subreach: self-hosted Reddit lead-generation agent that finds prospects, scores them with AI and drafts rule-checked replies for human review"
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.10"
+keywords = ["reddit", "lead-generation", "outreach", "ai-agent", "ai-sdr", "sales-automation", "self-hosted"]
 dependencies = [
     "requests>=2.28",
     "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0"]
+dev = ["pytest>=7.0", "httpx2"]   # httpx2: required by the FastAPI/Starlette test client
 supabase = ["psycopg[binary]>=3.1"]   # enables the Supabase/Postgres backend
+
+[project.urls]
+Homepage = "https://github.com/niihhhall/subreach"
+Issues = "https://github.com/niihhhall/subreach/issues"
+Changelog = "https://github.com/niihhhall/subreach/blob/main/CHANGELOG.md"
 
 [project.scripts]
 reddit-outreach = "reddit_outreach.cli:main"
