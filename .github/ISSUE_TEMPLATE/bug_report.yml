@@ -1,0 +1,63 @@
+name: Bug report
+description: Something does not work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Do not include API keys, tokens, `.env` contents or Reddit account details.
+        For a security problem, use private reporting instead (see SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `python -m reddit_outreach.cli run campaigns/example_campaign.yaml`
+        2. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Pipeline (discovery, qualification, drafting)
+        - Scout
+        - Sending or account health
+        - Warm-up swarm
+        - Dashboard (React)
+        - Web dashboard or API (FastAPI)
+        - Storage (SQLite or Postgres)
+        - Deploy (Docker, Render, Heroku)
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Reddit backend
+      description: Run `python -m reddit_outreach.cli doctor` to check.
+      options:
+        - mock
+        - zernio
+        - rdt
+        - opencli
+        - Not sure
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "OS, Python version, Node version, Docker or local"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error output
+      description: Remove any secrets before you paste.
+      render: shell
